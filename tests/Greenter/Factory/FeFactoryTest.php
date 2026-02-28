@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Giansalex
- * Date: 26/07/2017
- * Time: 23:50
- */
 
 declare(strict_types=1);
 
@@ -13,28 +7,24 @@ namespace Tests\Greenter\Factory;
 use Greenter\Ws\Services\SummarySender;
 use Greenter\Xml\Builder\SummaryBuilder;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
-/**
- * Class FeFactoryTest
- * @group integration
- */
+use PHPUnit\Framework\Attributes\Group;
+
+#[Group('integration')]
 class FeFactoryTest extends FeFactoryBase
 {
-    public function testInvoice()
+    public function testInvoice(): void
     {
         $invoice = $this->getInvoice();
-        $result = $this->getFactoryResult($invoice);
+        $result  = $this->getFactoryResult($invoice);
 
         $this->assertTrue($result->isSuccess());
         $this->assertNotNull($result->getCdrResponse());
-        $this->assertEquals(
-            '0',
-            $result->getCdrResponse()->getCode()
-        );
+        $this->assertEquals('0', $result->getCdrResponse()->getCode());
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
         $this->assertNotEmpty($result->getCdrZip());
     }
 
-    public function testGetXmlSigned()
+    public function testGetXmlSigned(): void
     {
         $invoice = $this->getInvoice();
         $builder = $this->getBuilder($invoice);
@@ -46,7 +36,7 @@ class FeFactoryTest extends FeFactoryBase
         $this->assertNotEmpty($signXml);
     }
 
-    public function testInvalidInvoice()
+    public function testInvalidInvoice(): void
     {
         $invoice = $this->getInvoice();
         $invoice->setTipoMoneda('UHT');
@@ -57,7 +47,7 @@ class FeFactoryTest extends FeFactoryBase
         $this->assertEquals('3088', $result->getError()->getCode());
     }
 
-    public function testInvoiceNotValidZipFileName()
+    public function testInvoiceNotValidZipFileName(): void
     {
         $invoice = $this->getInvoice();
         $invoice->setSerie('X001');
@@ -68,11 +58,10 @@ class FeFactoryTest extends FeFactoryBase
         $this->assertEquals('0151', $result->getError()->getCode());
     }
 
-    public function testInvoiceRechazado()
+    public function testInvoiceRechazado(): void
     {
         $invoice = $this->getInvoice();
         $invoice->getClient()->setTipoDoc('1');
-
         $result = $this->getFactoryResult($invoice);
 
         $this->assertFalse($result->isSuccess());
@@ -80,41 +69,35 @@ class FeFactoryTest extends FeFactoryBase
         $this->assertEquals('2801', $result->getError()->getCode());
     }
 
-    public function testNotaCredito()
+    public function testNotaCredito(): void
     {
         $creditNote = $this->getCreditNote();
-        $result = $this->getFactoryResult($creditNote);
+        $result     = $this->getFactoryResult($creditNote);
 
         $this->assertTrue($result->isSuccess());
         $this->assertNotNull($result->getCdrResponse());
-        $this->assertEquals(
-            '0',
-            $result->getCdrResponse()->getCode()
-        );
+        $this->assertEquals('0', $result->getCdrResponse()->getCode());
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
     }
 
-    public function testNotaDebito()
+    public function testNotaDebito(): void
     {
         $debitNote = $this->getDebitNote();
-        $result = $this->getFactoryResult($debitNote);
+        $result    = $this->getFactoryResult($debitNote);
 
         $this->assertTrue($result->isSuccess());
         $this->assertNotNull($result->getCdrResponse());
-        $this->assertEquals(
-            '0',
-            $result->getCdrResponse()->getCode()
-        );
+        $this->assertEquals('0', $result->getCdrResponse()->getCode());
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
     }
 
-    public function testResumen()
+    public function testResumen(): string
     {
         $resumen = $this->getSummary();
-        $result = $this->getFactoryResult($resumen);
+        $result  = $this->getFactoryResult($resumen);
+
         $this->assertInstanceOf(SummarySender::class, $this->factory->getSender());
         $this->assertInstanceOf(SummaryBuilder::class, $this->factory->getBuilder());
-
         $this->assertTrue($result->isSuccess());
         $this->assertNotEmpty($result->getTicket());
         $this->assertEquals(13, strlen($result->getTicket()));
@@ -122,9 +105,9 @@ class FeFactoryTest extends FeFactoryBase
         return $result->getTicket();
     }
 
-    public function testBaja()
+    public function testBaja(): string
     {
-        $baja = $this->getVoided();
+        $baja   = $this->getVoided();
         $result = $this->getFactoryResult($baja);
 
         if (!$result->isSuccess()) {
@@ -138,11 +121,8 @@ class FeFactoryTest extends FeFactoryBase
         return $result->getTicket();
     }
 
-    /**
-     * @depends testResumen
-     * @param string $ticket
-     */
-    public function testStatusResumenV2($ticket)
+    #[\PHPUnit\Framework\Attributes\Depends('testResumen')]
+    public function testStatusResumenV2(string $ticket): void
     {
         $result = $this->getExtService()->getStatus($ticket);
 
@@ -164,11 +144,8 @@ class FeFactoryTest extends FeFactoryBase
         $this->assertEquals('200', $result->getError()->getCode());
     }
 
-    /**
-     * @depends testBaja
-     * @param string $ticket
-     */
-    public function testStatus($ticket)
+    #[\PHPUnit\Framework\Attributes\Depends('testBaja')]
+    public function testStatus(string $ticket): void
     {
         $result = $this->getExtService()->getStatus($ticket);
 

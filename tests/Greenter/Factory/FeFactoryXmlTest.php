@@ -1,140 +1,107 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Giansalex
- * Date: 30/07/2017
- * Time: 12:10
- */
 
 declare(strict_types=1);
 
 namespace Tests\Greenter\Factory;
 
+use DOMDocument;
+use DOMXPath;
 use Greenter\Model\DocumentInterface;
 use Greenter\Model\Response\BaseResult;
 use Greenter\Services\SenderInterface;
 
-/**
- * Class FeFactoryXmlTest
- * @package Tests\Greenter
- */
 class FeFactoryXmlTest extends FeFactoryBase
 {
-    public function testInvoiceXml()
+    public function testInvoiceXml(): void
     {
         $invoice = $this->getInvoice();
         $this->getFactoryForXml($invoice);
 
-        $xml = $this->factory->getLastXml();
-        $xpt = $this->getXpath($xml);
-
+        $xpt  = $this->getXpath($this->factory->getLastXml());
         $nodes = $xpt->query('//ds:Signature');
-        $tipo = $xpt->query('//cbc:InvoiceTypeCode');
+        $tipo  = $xpt->query('//cbc:InvoiceTypeCode');
 
         $this->assertEquals(1, $nodes->length);
         $this->assertEquals(1, $tipo->length);
         $this->assertEquals($invoice->getTipoDoc(), $tipo->item(0)->nodeValue);
     }
 
-    public function testCreditNoteXml()
+    public function testCreditNoteXml(): void
     {
         $creditNote = $this->getCreditNote();
         $this->getFactoryForXml($creditNote);
 
-        $xml = $this->factory->getLastXml();
-
-
-        $xpt = $this->getXpath($xml);
-
+        $xpt  = $this->getXpath($this->factory->getLastXml());
         $nodes = $xpt->query('//ds:Signature');
-        $tipo = $xpt->query('//cbc:ResponseCode');
+        $tipo  = $xpt->query('//cbc:ResponseCode');
 
         $this->assertEquals(1, $nodes->length);
         $this->assertEquals(1, $tipo->length);
         $this->assertEquals($creditNote->getCodMotivo(), $tipo->item(0)->nodeValue);
     }
 
-    public function testDebitNoteXml()
+    public function testDebitNoteXml(): void
     {
         $debitNote = $this->getDebitNote();
         $this->getFactoryForXml($debitNote);
 
-        $xml = $this->factory->getLastXml();
-
-
-        $xpt = $this->getXpath($xml);
-
+        $xpt  = $this->getXpath($this->factory->getLastXml());
         $nodes = $xpt->query('//ds:Signature');
-        $tipo = $xpt->query('//cbc:ResponseCode');
+        $tipo  = $xpt->query('//cbc:ResponseCode');
 
         $this->assertEquals(1, $nodes->length);
         $this->assertEquals(1, $tipo->length);
         $this->assertEquals($debitNote->getCodMotivo(), $tipo->item(0)->nodeValue);
     }
 
-    public function testResumenXml()
+    public function testResumenXml(): void
     {
         $resumen = $this->getSummary();
         $this->getFactoryForXml($resumen);
 
-        $xml = $this->factory->getLastXml();
-
-
-        $xpt = $this->getXpath($xml);
-
+        $xpt  = $this->getXpath($this->factory->getLastXml());
         $nodes = $xpt->query('//ds:Signature');
-        $tipo = $xpt->query('//sac:SummaryDocumentsLine');
+        $tipo  = $xpt->query('//sac:SummaryDocumentsLine');
 
         $this->assertEquals(1, $nodes->length);
         $this->assertEquals(count($resumen->getDetails()), $tipo->length);
     }
 
-    public function testBajaXml()
+    public function testBajaXml(): void
     {
         $baja = $this->getVoided();
         $this->getFactoryForXml($baja);
 
-        $xml = $this->factory->getLastXml();
-
-
-        $xpt = $this->getXpath($xml);
-
+        $xpt  = $this->getXpath($this->factory->getLastXml());
         $nodes = $xpt->query('//ds:Signature');
-        $tipo = $xpt->query('//sac:VoidedDocumentsLine');
+        $tipo  = $xpt->query('//sac:VoidedDocumentsLine');
 
         $this->assertEquals(1, $nodes->length);
         $this->assertEquals(count($baja->getDetails()), $tipo->length);
     }
 
-    /**
-     * @param string $xml
-     * @return \DOMXPath
-     */
-    private function getXpath($xml)
+    private function getXpath(string $xml): DOMXPath
     {
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         $doc->loadXML($xml);
 
-        return new \DOMXPath($doc);
+        return new DOMXPath($doc);
     }
 
-    private function getFactoryForXml(DocumentInterface $document)
+    private function getFactoryForXml(DocumentInterface $document): void
     {
-        $sender = $this->getMockBuilder(SenderInterface::class)
-                    ->getMock();
+        $sender = $this->createStub(SenderInterface::class);
         $sender->method('send')
-                ->will($this->returnValue((new BaseResult())
-                    ->setSuccess(true)));
+            ->willReturn((new BaseResult())->setSuccess(true));
 
-        /**@var $sender SenderInterface */
         $builder = new $this->builders[get_class($document)]([
-            'cache' => false,
+            'cache'            => false,
             'strict_variables' => true,
         ]);
-        $factory = $this->factory
-            ->setBuilder($builder)
-            ->setSender($sender);
 
-        return $factory->send($document);
+        $this->factory
+            ->setBuilder($builder)
+            ->setSender($sender)
+            ->send($document);
     }
 }

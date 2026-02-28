@@ -136,6 +136,20 @@ class See
     }
 
     /**
+     * Get unsigned xml from document.
+     *
+     * @param DocumentInterface $document
+     *
+     * @return null|string
+     */
+    public function getXmlUnsigned(DocumentInterface $document): ?string
+    {
+        $buildResolver = new XmlBuilderResolver($this->options);
+
+        return $buildResolver->find(get_class($document))->build($document);
+    }
+
+    /**
      * Get signed xml from document.
      *
      * @param DocumentInterface $document

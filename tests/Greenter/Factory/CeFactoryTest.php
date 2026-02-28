@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Giansalex
- * Date: 09/08/2017
- * Time: 20:16
- */
 
 declare(strict_types=1);
 
@@ -12,48 +6,41 @@ namespace Tests\Greenter\Factory;
 
 use Greenter\Model\Response\CdrResponse;
 use Greenter\Model\Response\StatusResult;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 
-/**
- * Class CeFactoryTest.
- * @group integration
- */
+#[Group('integration')]
 class CeFactoryTest extends CeFactoryBase
 {
-    public function testRetention()
+    public function testRetention(): void
     {
         $retention = $this->getRetention();
-        $result = $this->getFactoryResult($retention);
+        $result    = $this->getFactoryResult($retention);
 
         $this->assertTrue($result->isSuccess());
         $this->assertNotNull($result->getCdrResponse());
-        $this->assertEquals(
-            '0',
-            $result->getCdrResponse()->getCode()
-        );
+        $this->assertEquals('0', $result->getCdrResponse()->getCode());
     }
 
-    public function testGetXmlSigned()
+    public function testGetXmlSigned(): void
     {
         $perception = $this->getPerception();
-        $signXml = $this->getXmlSigned($perception);
+        $signXml    = $this->getXmlSigned($perception);
 
         $this->assertNotEmpty($signXml);
     }
 
-    public function testPerception()
+    public function testPerception(): void
     {
         $perception = $this->getPerception();
-        $result = $this->getFactoryResult($perception);
+        $result     = $this->getFactoryResult($perception);
 
         $this->assertTrue($result->isSuccess());
         $this->assertNotNull($result->getCdrResponse());
-        $this->assertEquals(
-            '0',
-            $result->getCdrResponse()->getCode()
-        );
+        $this->assertEquals('0', $result->getCdrResponse()->getCode());
     }
 
-    public function testPerceptionNotValidRuc()
+    public function testPerceptionNotValidRuc(): void
     {
         $perception = $this->getPerception();
         $perception->getCompany()->setRuc('2000010000');
@@ -64,18 +51,15 @@ class CeFactoryTest extends CeFactoryBase
         $this->assertEquals('0151', $result->getError()->getCode());
     }
 
-    /**
-     * @return string
-     * @throws \Exception
-     */
-    public function testReversion()
+    public function testReversion(): string
     {
         $reversion = $this->getReversion();
-        $result = $this->getFactoryResult($reversion);
+        $result    = $this->getFactoryResult($reversion);
 
         if (!$result->isSuccess()) {
             return '';
         }
+
         $this->assertNotEmpty($this->factory->getLastXml());
         $this->assertTrue($result->isSuccess());
         $this->assertNotEmpty($result->getTicket());
@@ -84,15 +68,11 @@ class CeFactoryTest extends CeFactoryBase
         return $result->getTicket();
     }
 
-    /**
-     * @depends testReversion
-     * @param string $ticket
-     */
-    public function testStatus($ticket)
+    #[Depends('testReversion')]
+    public function testStatus(string $ticket): void
     {
         if ($ticket) {
-            $myFact = $this->getExtService();
-            $result = $myFact->getStatus($ticket);
+            $result = $this->getExtService()->getStatus($ticket);
         } else {
             $result = new StatusResult();
             $result
@@ -112,15 +92,13 @@ class CeFactoryTest extends CeFactoryBase
         $this->assertEquals('0', $result->getCode());
     }
 
-    public function testStatusInvalidTicket()
+    public function testStatusInvalidTicket(): void
     {
-        $myFact = $this->getExtService();
-        $result = $myFact->getStatus('123456789456');
+        $result = $this->getExtService()->getStatus('123456789456');
 
         $this->assertFalse($result->isSuccess());
         $this->assertNotNull($result->getError());
         $this->assertEquals('0127', $result->getError()->getCode());
-        $this->assertStringContainsString('El ticket no existe',
-            $result->getError()->getMessage());
+        $this->assertStringContainsString('El ticket no existe', $result->getError()->getMessage());
     }
 }

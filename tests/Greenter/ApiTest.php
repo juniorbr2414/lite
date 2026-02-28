@@ -13,20 +13,18 @@ use Greenter\Model\Despatch\DespatchDetail;
 use Greenter\Model\Despatch\Direction;
 use Greenter\Model\Despatch\Shipment;
 use Greenter\Model\Response\SummaryResult;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Class ApiTest
- * @group integration
- */
+#[Group('integration')]
 class ApiTest extends TestCase
 {
     public function testSend(): void
     {
-        $api = $this->getApi();
+        $api     = $this->getApi();
         $despatch = $this->createDespatch();
 
-        /**@var $result SummaryResult */
+        /** @var SummaryResult $result */
         $result = $api->send($despatch);
 
         $this->assertTrue($result->isSuccess());
@@ -38,21 +36,21 @@ class ApiTest extends TestCase
         $this->assertEquals('0', $res->getCode());
         $this->assertNotEmpty($res->getCdrZip());
         $this->assertStringContainsString('ACEPTADA', $res->getCdrResponse()->getDescription());
-        $this->assertStringStartsWith("http", $res->getCdrResponse()->getReference());
+        $this->assertStringStartsWith('http', $res->getCdrResponse()->getReference());
     }
 
     private function getApi(): Api
     {
         $api = new Api([
             'auth' => 'https://gre-test.nubefact.com/v1',
-            'cpe' => 'https://gre-test.nubefact.com/v1',
+            'cpe'  => 'https://gre-test.nubefact.com/v1',
         ]);
 
         return $api->setBuilderOptions([
                 'strict_variables' => true,
-                'optimizations' => 0,
-                'debug' => true,
-                'cache' => false,
+                'optimizations'    => 0,
+                'debug'            => true,
+                'cache'            => false,
             ])
             ->setApiCredentials('test-85e5b0ae-255c-4891-a595-0b98c65c9854', 'test-Hty/M6QshYvPgItX2P0+Kw==')
             ->setClaveSOL('20161515648', 'MODDATOS', 'MODDATOS')

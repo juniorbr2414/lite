@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Giansalex
- * Date: 26/07/2017
- * Time: 23:52
- */
 
 declare(strict_types=1);
 
@@ -46,29 +40,18 @@ use Greenter\Xml\Builder\VoidedBuilder;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Trait FeFactoryTrait
- * @package Tests\Greenter
- */
 class FeFactoryBase extends TestCase
 {
-    /**
-     * @var FeFactory
-     */
-    protected $factory;
-
-    /**
-     * @var array
-     */
-    protected $builders;
+    protected FeFactory $factory;
+    protected array $builders;
 
     protected function setUp(): void
     {
         $this->builders = [
             Invoice::class => InvoiceBuilder::class,
-            Note::class => NoteBuilder::class,
+            Note::class    => NoteBuilder::class,
             Summary::class => SummaryBuilder::class,
-            Voided::class => VoidedBuilder::class,
+            Voided::class  => VoidedBuilder::class,
         ];
 
         $signer = new SignedXml();
@@ -79,30 +62,21 @@ class FeFactoryBase extends TestCase
         $this->factory = $factory;
     }
 
-    /**
-     * @param string $className
-     * @param string $endpoint
-     * @return SenderInterface
-     */
-    private function getSender($className, $endpoint)
+    private function getSender(string $className, string $endpoint): SenderInterface
     {
         $client = new SoapClient(SunatEndpoints::WSDL_ENDPOINT);
         $client->setCredentials('20123456789MODDATOS', 'moddatos');
         $client->setService($endpoint);
-        $summValids = [Summary::class, Summary::class, Voided::class];
-        $sender = in_array($className, $summValids) ? new SummarySender(): new BillSender();
+        $summValids = [Summary::class, Voided::class];
+        $sender = in_array($className, $summValids) ? new SummarySender() : new BillSender();
         $sender->setClient($client);
 
         return $sender;
     }
 
-    /**
-     * @param DocumentInterface $document
-     * @return BaseResult|BillResult|SummaryResult|null
-     */
-    protected function getFactoryResult(DocumentInterface $document)
+    protected function getFactoryResult(DocumentInterface $document): BaseResult|BillResult|SummaryResult|null
     {
-        $sender = $this->getSender(get_class($document), SunatEndpoints::FE_BETA);
+        $sender  = $this->getSender(get_class($document), SunatEndpoints::FE_BETA);
         $builder = $this->getBuilder($document);
         $factory = $this->factory
             ->setBuilder($builder)
@@ -111,22 +85,15 @@ class FeFactoryBase extends TestCase
         return $factory->send($document);
     }
 
-    /**
-     * @param DocumentInterface $document
-     * @return BuilderInterface
-     */
-    protected function getBuilder(DocumentInterface $document)
+    protected function getBuilder(DocumentInterface $document): BuilderInterface
     {
         return new $this->builders[get_class($document)]([
-            'cache' => false,
+            'cache'            => false,
             'strict_variables' => true,
         ]);
     }
 
-    /**
-     * @return ExtService
-     */
-    protected function getExtService()
+    protected function getExtService(): ExtService
     {
         $client = new SoapClient(SunatEndpoints::WSDL_ENDPOINT);
         $client->setCredentials('20123456789MODDATOS', 'moddatos');
@@ -137,7 +104,7 @@ class FeFactoryBase extends TestCase
         return $service;
     }
 
-    protected function getInvoice()
+    protected function getInvoice(): Invoice
     {
         $client = new Client();
         $client->setTipoDoc('6')
@@ -202,7 +169,7 @@ class FeFactoryBase extends TestCase
         return $invoice;
     }
 
-    protected function getCreditNote()
+    protected function getCreditNote(): Note
     {
         $client = new Client();
         $client->setTipoDoc('6')
@@ -266,7 +233,7 @@ class FeFactoryBase extends TestCase
         return $note;
     }
 
-    protected function getCreditNoteV21()
+    protected function getCreditNoteV21(): Note
     {
         $client = new Client();
         $client->setTipoDoc('6')
@@ -315,7 +282,7 @@ class FeFactoryBase extends TestCase
         return $note;
     }
 
-    protected function getDebitNote()
+    protected function getDebitNote(): Note
     {
         $debit = $this->getCreditNote();
         $debit->setCodMotivo('01')
@@ -325,7 +292,7 @@ class FeFactoryBase extends TestCase
         return $debit;
     }
 
-    protected function getDebitNoteV21()
+    protected function getDebitNoteV21(): Note
     {
         $debit = $this->getCreditNoteV21();
         $debit->setCodMotivo('01')
@@ -336,7 +303,7 @@ class FeFactoryBase extends TestCase
         return $debit;
     }
 
-    protected function getSummary()
+    protected function getSummary(): Summary
     {
         $detiail1 = new SummaryDetail();
         $detiail1->setTipoDoc('07')
@@ -385,7 +352,7 @@ class FeFactoryBase extends TestCase
         return $sum;
     }
 
-    protected function getVoided()
+    protected function getVoided(): Voided
     {
         $detial1 = new VoidedDetail();
         $detial1->setTipoDoc('01')
@@ -409,10 +376,7 @@ class FeFactoryBase extends TestCase
         return $voided;
     }
 
-    /**
-     * @return Company
-     */
-    private function getCompany()
+    private function getCompany(): Company
     {
         $company = new Company();
         $address = new Address();
@@ -430,7 +394,7 @@ class FeFactoryBase extends TestCase
         return $company;
     }
 
-    private function getDate()
+    private function getDate(): DateTime
     {
         $date = new DateTime();
         try {

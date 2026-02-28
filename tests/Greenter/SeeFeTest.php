@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrador
- * Date: 16/10/2017
- * Time: 04:59 PM
- */
 
 declare(strict_types=1);
 
@@ -16,21 +10,18 @@ use Greenter\Model\Sale\Invoice;
 use Greenter\See;
 use Greenter\Validator\ErrorCodeProviderInterface;
 use Greenter\Ws\Services\SunatEndpoints;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Greenter\Factory\FeFactoryBase;
 
-/**
- * Class SeeFeTest
- * @group integration
- */
+#[Group('integration')]
 class SeeFeTest extends FeFactoryBase
 {
-    /**
-     * @dataProvider providerInvoiceDocsv21
-     * @param DocumentInterface $doc
-     */
-    public function testSendInvoiceV21(DocumentInterface $doc)
+    #[DataProvider('providerInvoiceDocsV21')]
+    public function testSendInvoiceV21(DocumentInterface $doc): void
     {
-        /**@var $result BillResult*/
+        /** @var BillResult $result */
         $see = $this->getSee();
         $this->assertNotNull($see->getFactory());
 
@@ -42,12 +33,9 @@ class SeeFeTest extends FeFactoryBase
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
     }
 
-    /**
-     * @return string
-     */
-    public function testSendSummary()
+    public function testSendSummary(): string
     {
-        $doc = $this->getSummary();
+        $doc    = $this->getSummary();
         $result = $this->getSee()->send($doc);
 
         $this->assertTrue($result->isSuccess());
@@ -57,11 +45,8 @@ class SeeFeTest extends FeFactoryBase
         return $result->getTicket();
     }
 
-    /**
-     * @depends testSendSummary
-     * @param $ticket
-     */
-    public function testGetStatus($ticket)
+    #[Depends('testSendSummary')]
+    public function testGetStatus(string $ticket): void
     {
         $result = $this->getSee()->getStatus($ticket);
 
@@ -77,21 +62,18 @@ class SeeFeTest extends FeFactoryBase
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
     }
 
-    /**
-     * @dataProvider providerInvoiceDocsV21
-     * @param DocumentInterface $doc
-     */
-    public function testGetXmlSigned(DocumentInterface $doc)
+    #[DataProvider('providerInvoiceDocsV21')]
+    public function testGetXmlSigned(DocumentInterface $doc): void
     {
         $xmlSigned = $this->getSee()->getXmlSigned($doc);
 
         $this->assertNotEmpty($xmlSigned);
     }
 
-    public function testSendXml()
+    public function testSendXml(): void
     {
-        $see = $this->getSee();
-        $invoice = $this->getInvoice();
+        $see      = $this->getSee();
+        $invoice  = $this->getInvoice();
         $xmlSigned = $see->getXmlSigned($invoice);
 
         $this->assertNotEmpty($xmlSigned);
@@ -104,13 +86,10 @@ class SeeFeTest extends FeFactoryBase
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function testSendXmlFile()
+    public function testSendXmlFile(): void
     {
-        $see = $this->getSee();
-        $invoice = $this->getInvoice();
+        $see      = $this->getSee();
+        $invoice  = $this->getInvoice();
         $xmlSigned = $see->getXmlSigned($invoice);
 
         $result = $see->sendXmlFile($xmlSigned);
@@ -121,24 +100,25 @@ class SeeFeTest extends FeFactoryBase
         $this->assertCount(0, $result->getCdrResponse()->getNotes());
     }
 
-    public function providerInvoiceDocsV21()
+    public static function providerInvoiceDocsV21(): array
     {
+        $base = new self('providerInvoiceDocsV21');
+
         return [
-            [$this->getInvoice()],
-            [$this->getCreditNote()],
-            [$this->getDebitNote()],
+            [$base->getInvoice()],
+            [$base->getCreditNote()],
+            [$base->getDebitNote()],
         ];
     }
 
-    private function getSee()
+    private function getSee(): See
     {
-        $endpoint = SunatEndpoints::FE_BETA;
         $see = new See();
-        $see->setService($endpoint);
+        $see->setService(SunatEndpoints::FE_BETA);
         $see->setBuilderOptions([
             'strict_variables' => true,
-            'optimizations' => 0,
-            'debug' => true,
+            'optimizations'    => 0,
+            'debug'            => true,
         ]);
         $see->setCachePath(null);
         $see->setCodeProvider($this->getErrorCodeProvider());
@@ -148,15 +128,11 @@ class SeeFeTest extends FeFactoryBase
         return $see;
     }
 
-    private function getErrorCodeProvider()
+    private function getErrorCodeProvider(): ErrorCodeProviderInterface
     {
-        $stub = $this->getMockBuilder(ErrorCodeProviderInterface::class)
-            ->getMock();
+        $stub = $this->createMock(ErrorCodeProviderInterface::class);
+        $stub->method('getValue')->willReturn('');
 
-        $stub->method('getValue')
-            ->willReturn('');
-
-        /**@var $stub ErrorCodeProviderInterface */
         return $stub;
     }
 }
