@@ -5,3 +5,4 @@ build/
 .phpunit.cache/
 *.cache
 .env
+CLAUDE.md

@@ -63,6 +63,16 @@ class SeeFeTest extends FeFactoryBase
     }
 
     #[DataProvider('providerInvoiceDocsV21')]
+    public function testGetXmlUnsigned(DocumentInterface $doc): void
+    {
+        $xml = $this->getSee()->getXmlUnsigned($doc);
+
+        $this->assertNotEmpty($xml);
+        $this->assertStringNotContainsString('<ds:Signature', $xml);
+        $this->assertStringContainsString('<?xml', $xml);
+    }
+
+    #[DataProvider('providerInvoiceDocsV21')]
     public function testGetXmlSigned(DocumentInterface $doc): void
     {
         $xmlSigned = $this->getSee()->getXmlSigned($doc);

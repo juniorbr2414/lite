@@ -8,10 +8,28 @@ use DOMDocument;
 use DOMXPath;
 use Greenter\Model\DocumentInterface;
 use Greenter\Model\Response\BaseResult;
+use Greenter\See;
 use Greenter\Services\SenderInterface;
 
 class FeFactoryXmlTest extends FeFactoryBase
 {
+    public function testGetXmlUnsignedInvoice(): void
+    {
+        $see     = new See();
+        $see->setBuilderOptions(['cache' => false, 'strict_variables' => true]);
+        $invoice = $this->getInvoice();
+
+        $xml = $see->getXmlUnsigned($invoice);
+
+        $this->assertNotEmpty($xml);
+        $this->assertStringContainsString('<?xml', $xml);
+        $this->assertStringNotContainsString('<ds:Signature', $xml);
+        $xpt  = $this->getXpath($xml);
+        $tipo = $xpt->query('//cbc:InvoiceTypeCode');
+        $this->assertEquals(1, $tipo->length);
+        $this->assertEquals($invoice->getTipoDoc(), $tipo->item(0)->nodeValue);
+    }
+
     public function testInvoiceXml(): void
     {
         $invoice = $this->getInvoice();
